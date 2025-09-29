@@ -1,0 +1,62 @@
+import pandas as pd
+import matplotlib.pyplot as plt
+from fpdf import FPDF
+import os
+from datetime import datetime
+
+class PDFGenerator:
+    def __init__(self):
+        self.pdf = FPDF()
+        self.pdf.set_auto_page_break(auto=True, margin=15)
+        
+    def create_student_report(self, student_id):
+        # Charger les données
+        df = pd.read_csv("data/evaluations.csv")
+        student_data = df[df['student_id'] == student_id]
+        
+        if student_data.empty:
+            return False
+        
+        # Créer le PDF
+        self.pdf.add_page()
+        
+        # En-tête
+        self.pdf.set_font("Arial", 'B', 16)
+        self.pdf.cell(0, 10, "Rapport de Leadership - PSPS", 0, 1, 'C')
+        self.pdf.ln(5)
+        
+        # Informations étudiant
+        self.pdf.set_font("Arial", '', 12)
+        self.pdf.cell(0, 10, f"Étudiant: {student_id}", 0, 1)
+        self.pdf.cell(0, 10, f"Programme: {student_data['program'].iloc[-1]}", 0, 1)
+        self.pdf.cell(0, 10, f"Dernière évaluation: {student_data['date'].iloc[-1]}", 0, 1)
+        self.pdf.ln(10)
+        
+        # Score total
+        self.pdf.set_font("Arial", 'B', 14)
+        self.pdf.cell(0, 10, f"Score de Leadership Global: {student_data['score_total'].iloc[-1]:.1f}/100", 0, 1)
+        self.pdf.ln(5)
+        
+        # Compétences détaillées
+        self.pdf.set_font("Arial", 'B', 12)
+        self.pdf.cell(0, 10, "Détail des Compétences:", 0, 1)
+        
+        skills = ['vision_strategique', 'prise_decision', 'communication', 
+                 'motivation_equipe', 'resilience', 'innovation']
+        
+        for skill in skills:
+            score = student_data[skill].iloc[-1]
+            self.pdf.set_font("Arial", '', 10)
+            self.pdf.cell(0, 8, f"• {skill.replace('_', ' ').title()}: {score}/100", 0, 1)
+        
+        # Sauvegarder le PDF
+        os.makedirs("reports", exist_ok=True)
+        filename = f"reports/{student_id}_report.pdf"
+        self.pdf.output(filename)
+        
+        return filename
+
+# Pour tester manuellement
+if __name__ == "__main__":
+    generator = PDFGenerator()
+    generator.create_student_report("PSPS2024001")

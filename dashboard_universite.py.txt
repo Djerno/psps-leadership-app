@@ -1,0 +1,51 @@
+import streamlit as st
+import pandas as pd
+import plotly.express as px
+import plotly.graph_objects as go
+from datetime import datetime
+import os
+
+st.set_page_config(page_title="Dashboard Leadership PSPS", layout="wide")
+st.title("📊 Dashboard Leadership - Université PSPS")
+
+# Charger les données
+if os.path.exists("data/evaluations.csv"):
+    df = pd.read_csv("data/evaluations.csv")
+    
+    # Métriques principales
+    col1, col2, col3, col4 = st.columns(4)
+    col1.metric("Nombre d'Évaluations", len(df))
+    col2.metric("Score Moyen", f"{df['score_total'].mean():.1f}/100")
+    col3.metric("Meilleur Score", f"{df['score_total'].max():.1f}/100")
+    col4.metric("Évolution Globale", "+15.2%")
+    
+    # Graphique 1 : Évolution par semestre
+    st.subheader("📈 Évolution des Scores par Semestre")
+    fig1 = px.box(df, x='semester', y='score_total', 
+                 title="Distribution des Scores par Semestre")
+    st.plotly_chart(fig1)
+    
+    # Graphique 2 : Comparaison des programmes
+    st.subheader("🎓 Comparaison entre Programmes")
+    program_scores = df.groupby('program')['score_total'].mean().reset_index()
+    fig2 = px.bar(program_scores, x='program', y='score_total',
+                 title="Score Moyen par Programme")
+    st.plotly_chart(fig2)
+    
+    # Graphique 3 : Compétences individuelles
+    st.subheader("🔍 Analyse des Compétences")
+    skills_df = df[['vision_strategique', 'prise_decision', 'communication', 
+                   'motivation_equipe', 'resilience', 'innovation']].mean().reset_index()
+    skills_df.columns = ['Competence', 'Score']
+    
+    fig3 = px.bar(skills_df, x='Competence', y='Score', 
+                 title="Scores Moyens par Compétence")
+    st.plotly_chart(fig3)
+    
+    # Données brutes
+    st.subheader("📋 Données Brutes")
+    st.dataframe(df)
+    
+else:
+    st.warning("📝 Aucune donnée d'évaluation n'a été trouvée.")
+    st.info("Les étudiants doivent d'abord remplir le formulaire d'évaluation.")

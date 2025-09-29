@@ -1,0 +1,70 @@
+import streamlit as st
+import pandas as pd
+from datetime import datetime
+import os
+
+# Configuration de la page
+st.set_page_config(page_title="Évaluation Leadership PSPS", page_icon="🎯")
+
+# Titre principal
+st.title("🎯 Évaluation des Compétences de Leadership - PSPS")
+st.write("*Remplissez ce formulaire à chaque semestre pour suivre votre progression*")
+
+# Formulaire
+with st.form("evaluation_form"):
+    st.header("Informations Personnelles")
+    
+    student_id = st.text_input("Numéro d'étudiant*", placeholder="ex: PSPS2024001")
+    program = st.selectbox("Programme*", ["", "Sustainable Development", "Public Policies", "Saemaul Development"])
+    semester = st.selectbox("Semestre*", ["", "Semestre 1", "Semestre 2", "Semestre 3", "Semestre 4"])
+    
+    st.header("Évaluation des Compétences de Leadership (0-100)")
+    st.write("Évaluez vos compétences sur une échelle de 0 à 100")
+    
+    vision_strategique = st.slider("Vision Stratégique", 0, 100, 50)
+    prise_decision = st.slider("Prise de Décision", 0, 100, 50)
+    communication = st.slider("Communication", 0, 100, 50)
+    motivation_equipe = st.slider("Motivation d'Équipe", 0, 100, 50)
+    resilience = st.slider("Résilience", 0, 100, 50)
+    innovation = st.slider("Innovation", 0, 100, 50)
+    
+    submitted = st.form_submit_button("✅ Soumettre l'Évaluation")
+    
+    if submitted:
+        if not student_id or not program or not semester:
+            st.error("⚠️ Veuillez remplir tous les champs obligatoires (*)")
+        else:
+            # Créer le dossier data s'il n'existe pas
+            os.makedirs("data", exist_ok=True)
+            
+            # Préparer les données
+            evaluation_data = {
+                'date': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                'student_id': student_id,
+                'program': program,
+                'semester': semester,
+                'vision_strategique': vision_strategique,
+                'prise_decision': prise_decision,
+                'communication': communication,
+                'motivation_equipe': motivation_equipe,
+                'resilience': resilience,
+                'innovation': innovation
+            }
+            
+            # Calculer le score total
+            scores = [vision_strategique, prise_decision, communication, 
+                     motivation_equipe, resilience, innovation]
+            evaluation_data['score_total'] = sum(scores) / len(scores)
+            
+            # Sauvegarder dans un fichier CSV
+            df = pd.DataFrame([evaluation_data])
+            
+            # Vérifier si le fichier existe déjà
+            if os.path.exists("data/evaluations.csv"):
+                existing_df = pd.read_csv("data/evaluations.csv")
+                df = pd.concat([existing_df, df], ignore_index=True)
+            
+            df.to_csv("data/evaluations.csv", index=False)
+            
+            st.success("🎉 Évaluation soumise avec succès !")
+            st.balloons()
